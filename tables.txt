@@ -1,0 +1,46 @@
+for the tables "1. Table: employee
+
+Stores all employees in the company.
+
+column	type	notes
+id	int8 (PK)	primary key
+created_at	timestamptz	default now()
+name	varchar	employee full name
+is_active	boolean	show/hide in dropdown
+2. Table: intern
+
+Stores all interns in the company.
+
+column	type	notes
+id	int8 (PK)	primary key
+created_at	timestamptz	default now()
+name	varchar	intern full name
+is_active	boolean	show/hide in dropdown
+3. Table: emp_attendance_logs
+
+Stores employee entry/exit logs.
+
+column	type	notes
+id	int8 (PK)	primary key
+created_at	timestamptz	default now()
+action	varchar	"entry" or "exit"
+emp_id	int8	FK → employee.id
+4. Table: intern_attendance_logs
+
+Stores intern entry/exit logs.
+
+column	type	notes
+id	int8 (PK)	primary key
+created_at	timestamptz	default now()
+action	varchar	"entry" or "exit"
+intern_id	int8	FK → intern.id"
+and for the auth and .end.local  i did use "✔ NEXT_PUBLIC_SUPABASE_URL
+
+From:
+Settings → Project Settings → General → Project URL
+
+✔ NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+Use the Publishable key shown here:
+
+Settings → API Keys → Publishable key"
