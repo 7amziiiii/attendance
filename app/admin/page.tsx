@@ -86,20 +86,40 @@ export default function AdminPage() {
         });
     };
 
-    const getFilteredData = () => {
-        const data = activeTab === 'employee' ? employeeLogs : internLogs;
+    const getDayKey = (dateString: string) => {
+        const date = new Date(dateString);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${date.getFullYear()}-${month}-${day}`;
+    };
 
-        return data.filter(item => {
-            // Filter by Action
-            if (actionFilter !== 'all' && item.action !== actionFilter) return false;
+    const getCombinedData = () => {
+        const logs = activeTab === 'employee' ? employeeLogs : internLogs;
+        const map = new Map<string, { key: string; name: string; entry?: string; exit?: string }>();
 
-            // Filter by Name
+        logs.forEach(log => {
             const name = activeTab === 'employee'
-                ? (item as EmployeeLogWithName).employee?.name
-                : (item as InternLogWithName).intern?.name;
+                ? (log as EmployeeLogWithName).employee?.name
+                : (log as InternLogWithName).intern?.name;
+            if (!name) return;
 
-            if (nameFilter && !name?.toLowerCase().includes(nameFilter.toLowerCase())) return false;
+            const dayKey = getDayKey(log.created_at);
+            const key = `${name}-${dayKey}`;
+            const existing = map.get(key) || { key, name };
 
+            if (log.action === 'entry') {
+                existing.entry = log.created_at;
+            } else if (log.action === 'exit') {
+                existing.exit = log.created_at;
+            }
+
+            map.set(key, existing);
+        });
+
+        return Array.from(map.values()).filter(item => {
+            if (nameFilter && !item.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
+            if (actionFilter === 'entry' && !item.entry) return false;
+            if (actionFilter === 'exit' && !item.exit) return false;
             return true;
         });
     };
@@ -114,31 +134,26 @@ export default function AdminPage() {
 
     const columns = [
         {
-            header: 'Time',
-            accessor: (item: any) => (
-                <span className="text-gray-500 font-mono text-sm">
-                    {formatDate(item.created_at)}
-                </span>
-            )
-        },
-        {
             header: 'Name',
             accessor: (item: any) => (
                 <span className="font-medium text-gray-900 dark:text-white">
-                    {activeTab === 'employee'
-                        ? item.employee?.name || 'Unknown'
-                        : item.intern?.name || 'Unknown'}
+                    {item.name}
                 </span>
             )
         },
         {
-            header: 'Action',
+            header: 'Entry',
             accessor: (item: any) => (
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${item.action === 'entry'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                    }`}>
-                    {item.action}
+                <span className="text-gray-600 dark:text-gray-400">
+                    {item.entry ? formatDate(item.entry) : 'No action'}
+                </span>
+            )
+        },
+        {
+            header: 'Exit',
+            accessor: (item: any) => (
+                <span className="text-gray-600 dark:text-gray-400">
+                    {item.exit ? formatDate(item.exit) : 'No action'}
                 </span>
             )
         }
@@ -158,8 +173,8 @@ export default function AdminPage() {
                             <button
                                 onClick={() => setActiveTab('employee')}
                                 className={`flex-1 px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'employee'
-                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
                                 Employees
@@ -167,8 +182,8 @@ export default function AdminPage() {
                             <button
                                 onClick={() => setActiveTab('intern')}
                                 className={`flex-1 px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'intern'
-                                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
                                 Interns
@@ -202,9 +217,9 @@ export default function AdminPage() {
 
                     {/* Table */}
                     <Table
-                        data={getFilteredData()}
+                        data={getCombinedData()}
                         columns={columns}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={(item) => item.key || item.name}
                         emptyMessage={`No ${activeTab} logs found matching your filters.`}
                     />
                 </div>
