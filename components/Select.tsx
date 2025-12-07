@@ -9,7 +9,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export default function Select({
     label,
     options,
-    placeholder = 'Select an option',
+    placeholder = 'اختر خياراً',
     className = '',
     ...props
 }: SelectProps) {

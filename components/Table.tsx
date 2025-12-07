@@ -17,7 +17,7 @@ export default function Table<T>({
     data,
     columns,
     keyExtractor,
-    emptyMessage = 'No data available'
+    emptyMessage = 'لا توجد بيانات متاحة'
 }: TableProps<T>) {
     if (data.length === 0) {
         return (
@@ -29,7 +29,7 @@ export default function Table<T>({
 
     return (
         <div className="overflow-x-auto rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-            <table className="w-full text-left border-collapse bg-white dark:bg-gray-800">
+            <table className="w-full text-right border-collapse bg-white dark:bg-gray-800">
                 <thead>
                     <tr className="bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                         {columns.map((col, index) => (

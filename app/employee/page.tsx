@@ -6,8 +6,10 @@ import { Employee } from '@/lib/database.types';
 import Button from '@/components/Button';
 import Select from '@/components/Select';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function EmployeePage() {
+    const router = useRouter();
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [selectedId, setSelectedId] = useState<string>('');
     const [loading, setLoading] = useState(true);
@@ -30,7 +32,7 @@ export default function EmployeePage() {
             setEmployees(data || []);
         } catch (error) {
             console.error('Error fetching employees:', error);
-            setMessage({ type: 'error', text: 'Failed to load employees' });
+            setMessage({ type: 'error', text: 'فشل تحميل الموظفين' });
         } finally {
             setLoading(false);
         }
@@ -38,7 +40,7 @@ export default function EmployeePage() {
 
     const handleAttendance = async (action: 'entry' | 'exit') => {
         if (!selectedId) {
-            setMessage({ type: 'error', text: 'Please select your name first' });
+            setMessage({ type: 'error', text: 'يرجى اختيار اسمك أولاً' });
             return;
         }
 
@@ -57,20 +59,11 @@ export default function EmployeePage() {
 
             if (error) throw error;
 
-            const employeeName = employees.find(e => e.id === parseInt(selectedId))?.name;
-            setMessage({
-                type: 'success',
-                text: `${action === 'entry' ? 'Entry' : 'Exit'} recorded successfully for ${employeeName}`
-            });
-
-            // Clear selection after success
-            setSelectedId('');
-
-            // Clear message after 3 seconds
-            setTimeout(() => setMessage(null), 3000);
+            // Redirect to success page
+            router.push(`/success/${action}`);
         } catch (error) {
             console.error('Error recording attendance:', error);
-            setMessage({ type: 'error', text: 'Failed to record attendance. Please try again.' });
+            setMessage({ type: 'error', text: 'فشل تسجيل الحضور. يرجى المحاولة مرة أخرى.' });
         } finally {
             setSubmitting(false);
         }
@@ -88,17 +81,17 @@ export default function EmployeePage() {
         <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
             <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Employee Attendance</h1>
-                    <p className="text-gray-500 dark:text-gray-400">Select your name and record your status</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">حضور الموظفين</h1>
+                    <p className="text-gray-500 dark:text-gray-400">اختر اسمك وسجل حالتك</p>
                 </div>
 
                 <div className="space-y-6">
                     <Select
-                        label="Select Name"
+                        label="اختر الاسم"
                         value={selectedId}
                         onChange={(e) => setSelectedId(e.target.value)}
                         options={employees.map(emp => ({ value: emp.id, label: emp.name }))}
-                        placeholder="Choose your name..."
+                        placeholder="اختر اسمك..."
                     />
 
                     <div className="grid grid-cols-2 gap-4 pt-4">
@@ -107,21 +100,21 @@ export default function EmployeePage() {
                             onClick={() => handleAttendance('entry')}
                             disabled={submitting || !selectedId}
                         >
-                            Entry
+                            دخول
                         </Button>
                         <Button
                             variant="danger"
                             onClick={() => handleAttendance('exit')}
                             disabled={submitting || !selectedId}
                         >
-                            Exit
+                            خروج
                         </Button>
                     </div>
 
                     {message && (
                         <div className={`p-4 rounded-xl text-center font-medium animate-fade-in ${message.type === 'success'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                             }`}>
                             {message.text}
                         </div>
@@ -130,7 +123,7 @@ export default function EmployeePage() {
 
                 <div className="text-center pt-4">
                     <Link href="/" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium">
-                        ← Back to Home
+                        → العودة للرئيسية
                     </Link>
                 </div>
             </div>

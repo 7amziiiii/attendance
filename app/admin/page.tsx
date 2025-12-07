@@ -77,7 +77,7 @@ export default function AdminPage() {
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleString('en-US', {
+        return new Date(dateString).toLocaleString('ar-SA', {
             month: 'short',
             day: 'numeric',
             hour: 'numeric',
@@ -134,7 +134,7 @@ export default function AdminPage() {
 
     const columns = [
         {
-            header: 'Name',
+            header: 'الاسم',
             accessor: (item: any) => (
                 <span className="font-medium text-gray-900 dark:text-white">
                     {item.name}
@@ -142,18 +142,18 @@ export default function AdminPage() {
             )
         },
         {
-            header: 'Entry',
+            header: 'الدخول',
             accessor: (item: any) => (
                 <span className="text-gray-600 dark:text-gray-400">
-                    {item.entry ? formatDate(item.entry) : 'No action'}
+                    {item.entry ? formatDate(item.entry) : 'لا يوجد إجراء'}
                 </span>
             )
         },
         {
-            header: 'Exit',
+            header: 'الخروج',
             accessor: (item: any) => (
                 <span className="text-gray-600 dark:text-gray-400">
-                    {item.exit ? formatDate(item.exit) : 'No action'}
+                    {item.exit ? formatDate(item.exit) : 'لا يوجد إجراء'}
                 </span>
             )
         }
@@ -167,7 +167,7 @@ export default function AdminPage() {
                 <div className="space-y-6">
                     {/* Header & Tabs */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Attendance Logs</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">سجلات الحضور</h1>
 
                         <div className="flex bg-white dark:bg-gray-800 p-1 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                             <button
@@ -177,7 +177,7 @@ export default function AdminPage() {
                                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
-                                Employees
+                                الموظفون
                             </button>
                             <button
                                 onClick={() => setActiveTab('intern')}
@@ -186,7 +186,7 @@ export default function AdminPage() {
                                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
-                                Interns
+                                المتدربون
                             </button>
                         </div>
                     </div>
@@ -196,7 +196,7 @@ export default function AdminPage() {
                         <div className="md:col-span-2">
                             <input
                                 type="text"
-                                placeholder="Search by name..."
+                                placeholder="البحث بالاسم..."
                                 value={nameFilter}
                                 onChange={(e) => setNameFilter(e.target.value)}
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
@@ -208,9 +208,9 @@ export default function AdminPage() {
                                 onChange={(e) => setActionFilter(e.target.value as any)}
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                             >
-                                <option value="all">All Actions</option>
-                                <option value="entry">Entry Only</option>
-                                <option value="exit">Exit Only</option>
+                                <option value="all">جميع الإجراءات</option>
+                                <option value="entry">الدخول فقط</option>
+                                <option value="exit">الخروج فقط</option>
                             </select>
                         </div>
                     </div>
@@ -220,7 +220,7 @@ export default function AdminPage() {
                         data={getCombinedData()}
                         columns={columns}
                         keyExtractor={(item) => item.key || item.name}
-                        emptyMessage={`No ${activeTab} logs found matching your filters.`}
+                        emptyMessage={`لا توجد سجلات ${activeTab === 'employee' ? 'موظفين' : 'متدربين'} تطابق الفلاتر.`}
                     />
                 </div>
             </main>

@@ -14,11 +14,11 @@ export default function Navbar({ onLogout, userEmail }: NavbarProps) {
                 <div className="flex justify-between h-16 items-center">
                     <div className="flex-shrink-0 flex items-center">
                         <Link href="/admin" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            Attendance Admin
+                            لوحة تحكم الحضور
                         </Link>
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-reverse space-x-4">
                         {userEmail && (
                             <span className="hidden sm:block text-sm text-gray-500 dark:text-gray-400">
                                 {userEmail}
@@ -31,7 +31,7 @@ export default function Navbar({ onLogout, userEmail }: NavbarProps) {
                                 onClick={onLogout}
                                 className="!rounded-lg"
                             >
-                                Logout
+                                تسجيل الخروج
                             </Button>
                         )}
                     </div>

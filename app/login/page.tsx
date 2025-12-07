@@ -49,15 +49,15 @@ export default function LoginPage() {
         <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
             <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-xl">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Admin Login</h1>
-                    <p className="text-gray-500 dark:text-gray-400">Sign in to view attendance logs</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">تسجيل دخول المسؤول</h1>
+                    <p className="text-gray-500 dark:text-gray-400">سجل الدخول لعرض سجلات الحضور</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div className="space-y-4">
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Email Address
+                                البريد الإلكتروني
                             </label>
                             <input
                                 id="email"
@@ -71,7 +71,7 @@ export default function LoginPage() {
                         </div>
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Password
+                                كلمة المرور
                             </label>
                             <input
                                 id="password"
@@ -96,13 +96,13 @@ export default function LoginPage() {
                         className="w-full"
                         disabled={loading}
                     >
-                        {loading ? 'Signing in...' : 'Sign In'}
+                        {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
                     </Button>
                 </form>
 
                 <div className="text-center pt-4">
                     <Link href="/" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium">
-                        ← Back to Home
+                        → العودة للرئيسية
                     </Link>
                 </div>
             </div>
