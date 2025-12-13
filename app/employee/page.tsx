@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Employee } from '@/lib/database.types';
+import { Employee, EmployeeAttendanceLog } from '@/lib/database.types';
 import Button from '@/components/Button';
 import Select from '@/components/Select';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
+type AttendanceStatus = 'outside' | 'inside' | 'loading' | null;
 
 export default function EmployeePage() {
     const router = useRouter();
@@ -15,6 +17,11 @@ export default function EmployeePage() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+    // New state for attendance status detection
+    const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>(null);
+    const [lastEntryTime, setLastEntryTime] = useState<string | null>(null);
+    const [checkingStatus, setCheckingStatus] = useState(false);
 
     useEffect(() => {
         fetchEmployees();
@@ -38,11 +45,78 @@ export default function EmployeePage() {
         }
     };
 
-    const handleAttendance = async (action: 'entry' | 'exit') => {
-        if (!selectedId) {
+    // New function: Check attendance status
+    const checkAttendanceStatus = async (empId: string) => {
+        setCheckingStatus(true);
+        setAttendanceStatus('loading');
+        setMessage(null);
+
+        try {
+            // Get today's start (midnight)
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+
+            // Fetch today's attendance logs for this employee, ordered by time
+            const { data, error } = await supabase
+                .from('emp_attendance_logs')
+                .select('*')
+                .eq('emp_id', parseInt(empId))
+                .gte('created_at', todayStart.toISOString())
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            // Determine status based on latest record
+            if (!data || data.length === 0) {
+                // No attendance today - user is outside
+                setAttendanceStatus('outside');
+                setLastEntryTime(null);
+            } else {
+                const latestLog = data[0] as EmployeeAttendanceLog;
+
+                if (latestLog.action === 'entry') {
+                    // Last action was entry - user is inside
+                    setAttendanceStatus('inside');
+                    setLastEntryTime(latestLog.created_at);
+                } else {
+                    // Last action was exit - user is outside
+                    setAttendanceStatus('outside');
+                    setLastEntryTime(null);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking attendance status:', error);
+            setMessage({ type: 'error', text: 'فشل التحقق من حالة الحضور' });
+            setAttendanceStatus(null);
+        } finally {
+            setCheckingStatus(false);
+        }
+    };
+
+    // Modified: Handle name selection
+    const handleNameSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newId = e.target.value;
+        setSelectedId(newId);
+
+        // Reset status when changing selection
+        setAttendanceStatus(null);
+        setLastEntryTime(null);
+
+        // Check status if a valid ID is selected
+        if (newId) {
+            checkAttendanceStatus(newId);
+        }
+    };
+
+    // Modified: Handle attendance with auto-detection
+    const handleAttendance = async () => {
+        if (!selectedId || !attendanceStatus || attendanceStatus === 'loading') {
             setMessage({ type: 'error', text: 'يرجى اختيار اسمك أولاً' });
             return;
         }
+
+        // Determine action based on current status
+        const action: 'entry' | 'exit' = attendanceStatus === 'outside' ? 'entry' : 'exit';
 
         setSubmitting(true);
         setMessage(null);
@@ -69,6 +143,35 @@ export default function EmployeePage() {
         }
     };
 
+    // Helper: Format time for display
+    const formatTime = (timestamp: string) => {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('ar-EG', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+
+    // Helper: Get button text and variant based on status
+    const getButtonConfig = () => {
+        if (attendanceStatus === 'outside') {
+            return {
+                text: 'تسجيل دخول 🚪',
+                variant: 'success' as const
+            };
+        } else if (attendanceStatus === 'inside') {
+            return {
+                text: 'تسجيل خروج 👋',
+                variant: 'danger' as const
+            };
+        }
+        return {
+            text: 'تسجيل الإجراء',
+            variant: 'primary' as const
+        };
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
@@ -76,6 +179,8 @@ export default function EmployeePage() {
             </div>
         );
     }
+
+    const buttonConfig = getButtonConfig();
 
     return (
         <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
@@ -89,25 +194,48 @@ export default function EmployeePage() {
                     <Select
                         label="اختر الاسم"
                         value={selectedId}
-                        onChange={(e) => setSelectedId(e.target.value)}
+                        onChange={handleNameSelection}
                         options={employees.map(emp => ({ value: emp.id, label: emp.name }))}
                         placeholder="اختر اسمك..."
                     />
 
-                    <div className="grid grid-cols-2 gap-4 pt-4">
+                    {/* Status Display */}
+                    {checkingStatus && (
+                        <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                <span className="text-blue-700 dark:text-blue-300 font-medium">
+                                    جاري التحقق من الحالة...
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {attendanceStatus === 'outside' && !checkingStatus && (
+                        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 text-center animate-fade-in">
+                            <p className="text-red-700 dark:text-red-300 font-bold text-lg">
+                                الحالة الحالية: ❌ لم يتم تسجيل دخولك اليوم
+                            </p>
+                        </div>
+                    )}
+
+                    {attendanceStatus === 'inside' && !checkingStatus && lastEntryTime && (
+                        <div className="p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 text-center animate-fade-in">
+                            <p className="text-green-700 dark:text-green-300 font-bold text-lg">
+                                الحالة الحالية: ✅ أنت مسجل دخول منذ {formatTime(lastEntryTime)}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Single Action Button */}
+                    <div className="pt-4">
                         <Button
-                            variant="success"
-                            onClick={() => handleAttendance('entry')}
-                            disabled={submitting || !selectedId}
+                            variant={buttonConfig.variant}
+                            onClick={handleAttendance}
+                            disabled={submitting || !selectedId || checkingStatus || !attendanceStatus || attendanceStatus === 'loading'}
+                            className="w-full"
                         >
-                            دخول
-                        </Button>
-                        <Button
-                            variant="danger"
-                            onClick={() => handleAttendance('exit')}
-                            disabled={submitting || !selectedId}
-                        >
-                            خروج
+                            {submitting ? 'جاري التسجيل...' : buttonConfig.text}
                         </Button>
                     </div>
 
